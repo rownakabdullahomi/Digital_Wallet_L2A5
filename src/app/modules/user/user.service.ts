@@ -5,21 +5,35 @@ import {
 } from "../transaction/transaction.interface";
 import { Transaction } from "../transaction/transaction.model";
 import { Wallet } from "../wallet/wallet.model";
-import { IUser } from "./user.interface";
+import { IAuthProvider, IUser } from "./user.interface";
 import { User } from "./user.model";
-import httpStatus from 'http-status-codes';
-
+import httpStatus from "http-status-codes";
+import bcryptjs from "bcryptjs";
 
 const createUser = async (payload: Partial<IUser>) => {
-  const { name, email } = payload;
+  const { email, password, ...rest } = payload;
+
+  const isUserExist = await User.findOne({ email });
+
+  if (isUserExist)
+    throw new AppError(httpStatus.BAD_REQUEST, "User already exists.");
+
+  const hashedPassword = await bcryptjs.hash(password as string, 10);
+
+  const authProvider: IAuthProvider = {
+    provider: "Credentials",
+    providerId: email as string,
+  };
 
   //> Step 1: Create the user
   const user = await User.create({
-    name,
     email,
+    password: hashedPassword,
+    auths: [authProvider],
+    ...rest,
   });
 
-  if(!user) throw new AppError (httpStatus.NOT_FOUND ,"User not found")
+  if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
 
   //> Step 2: Create wallet with initial balance (৳50)
   const wallet = await Wallet.create({
@@ -27,7 +41,7 @@ const createUser = async (payload: Partial<IUser>) => {
     balance: 50,
   });
 
-  if(!wallet) throw new AppError (httpStatus.NOT_FOUND, "Wallet not found")
+  if (!wallet) throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
 
   //> Step 3: Create initial transaction for opening balance
   await Transaction.create({
@@ -46,7 +60,7 @@ const createUser = async (payload: Partial<IUser>) => {
   return user;
 };
 
-const getAllUsers = async()=>{
+const getAllUsers = async () => {
   const users = await User.find();
 
   const totalUsers = await User.countDocuments();
@@ -54,10 +68,10 @@ const getAllUsers = async()=>{
   return {
     data: users,
     meta: {
-      total: totalUsers
-    }
+      total: totalUsers,
+    },
   };
-}
+};
 
 export const UserService = {
   createUser,
