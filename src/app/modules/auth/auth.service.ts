@@ -30,6 +30,7 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
 
   //   const accessToken = jwt.sign(jwtPayload, envVars.JWT_ACCESS_SECRET, {expiresIn: envVars.JWT_ACCESS_EXPIRES} as SignOptions)
 
+
   const accessToken = generateToken(
     jwtPayload,
     envVars.JWT_ACCESS_SECRET,
