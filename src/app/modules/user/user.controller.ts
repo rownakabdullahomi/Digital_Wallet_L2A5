@@ -4,6 +4,9 @@ import httpStatus from "http-status-codes";
 import { UserService } from "./user.service";
 import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
+import { verifyToken } from "../../utils/jwt";
+import envVars from "../../config/env";
+import { JwtPayload } from "jsonwebtoken";
 
 // const createUser = async (req: Request, res: Response, next: NextFunction) => {
 //     try {
@@ -29,15 +32,16 @@ const createUser = catchAsync(
     //   user,
     // });
     sendResponse(res, {
-        statusCode: httpStatus.CREATED,
-        success: true,
-        message: "✅ User created successfully.",
-        data: user,
-    })
+      statusCode: httpStatus.CREATED,
+      success: true,
+      message: "✅ User created successfully.",
+      data: user,
+    });
   }
 );
 
-const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+const getAllUsers = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
     const users = await UserService.getAllUsers();
     // res.status(httpStatus.OK).json({
     //   success: true,
@@ -45,15 +49,38 @@ const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFun
     //   users,
     // });
     sendResponse(res, {
-        statusCode: httpStatus.CREATED,
-        success: true,
-        message: "✅ All users retrieved successfully.",
-        data: users.data,
-        meta: users.meta,
-    })
-});
+      statusCode: httpStatus.CREATED,
+      success: true,
+      message: "✅ All users retrieved successfully.",
+      data: users.data,
+      meta: users.meta,
+    });
+  }
+);
+
+const updateUser = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.id;
+    const payload = req.body;
+    const token = req.headers.authorization;
+    const verifiedToken = verifyToken(
+      token as string,
+      envVars.JWT_ACCESS_SECRET
+    ) as JwtPayload;
+
+    const user = await UserService.updateUser(userId, payload, verifiedToken);
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "✅ User successfully updated",
+      data: user,
+    });
+  }
+);
 
 export const UserController = {
   createUser,
   getAllUsers,
+  updateUser,
 };

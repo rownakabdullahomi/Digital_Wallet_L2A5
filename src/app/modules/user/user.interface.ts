@@ -17,6 +17,11 @@ export enum IsActive {
   INACTIVE = "INACTIVE",
   BLOCKED = "BLOCKED",
 }
+export enum IsAgentApproved {
+  NOT_APPROVED = "NOT_APPROVED",
+  PENDING = "PENDING",
+  APPROVED = "APPROVED"
+}
 
 export interface IUser {
   name?: string;
@@ -37,7 +42,7 @@ export interface IUser {
   walletId?: Types.ObjectId;
 
   //> Agent-specific fields
-  isApproved?: boolean;
+  isAgentApproved?: IsAgentApproved;
   commissionRate?: number;
 
 }

@@ -1,5 +1,5 @@
 import z from "zod";
-import { IsActive, Role } from "./user.interface";
+import { IsActive, IsAgentApproved, Role } from "./user.interface";
 
 export const createUserZodSchema = z.object({
   name: z
@@ -74,8 +74,6 @@ export const updateUserZodSchema = z.object({
   isVerified: z
     .boolean({ message: "isVerified must be true or false" })
     .optional(),
-  isApproved: z
-    .boolean({ message: "isApproved must be true or false" })
-    .optional(),
+  isAgentApproved: z.enum(Object.values(IsAgentApproved) as [string]).optional(),
   commissionRate: z.number({ message: "isApproved must be number" }).optional(),
 });
