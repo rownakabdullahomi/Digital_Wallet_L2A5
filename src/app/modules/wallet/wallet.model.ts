@@ -1,6 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IWallet } from "./wallet.interface";
-
+import { IWallet, WalletStatus } from "./wallet.interface";
 
 const walletSchema = new Schema<IWallet>(
   {
@@ -14,6 +13,11 @@ const walletSchema = new Schema<IWallet>(
       type: Number,
       default: 50,
       min: 0,
+    },
+    walletStatus: {
+      type: String,
+      enum: Object.values(WalletStatus),
+      default: WalletStatus.ACTIVE,
     },
   },
   {

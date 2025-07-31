@@ -24,10 +24,10 @@ export const globalErrorHandler = (
     message = error.message
   }
 
-  if(error instanceof Error){
-    statusCode = 500;
-    message = error.message;
-  }
+  // if(error instanceof Error){
+  //   statusCode = 500;
+  //   message = error.message;
+  // }
 
 
 

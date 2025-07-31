@@ -20,7 +20,8 @@ export enum IsActive {
 export enum IsAgentApproved {
   NOT_APPROVED = "NOT_APPROVED",
   PENDING = "PENDING",
-  APPROVED = "APPROVED"
+  APPROVED = "APPROVED",
+  SUSPENDED = "SUSPENDED"
 }
 
 export interface IUser {

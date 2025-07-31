@@ -9,6 +9,7 @@ import httpStatus from "http-status-codes";
 import { Wallet } from "../wallet/wallet.model";
 import { validateUserById } from "../../utils/validateUserById";
 import { JwtPayload } from "jsonwebtoken";
+import { IsAgentApproved } from "../user/user.interface";
 
 // const createTransaction = async (payload: Partial<ITransaction>) => {
 //     const transaction = await Transaction.create(payload);
@@ -30,6 +31,9 @@ const addMoneyForAgent = async (
 
   // 2. Validate agent using reusable utility
   const agent = await validateUserById(agentId);
+
+  if (agent.isAgentApproved === IsAgentApproved.SUSPENDED)
+    throw new AppError(httpStatus.FORBIDDEN, "Agent is suspended!");
 
   // 3. Find the agent's wallet
   const wallet = await Wallet.findOne({ userId: agent._id });
@@ -80,6 +84,9 @@ const cashInOutRequestFromUser = async (
   // 3. Ensure agent role
   if (agent.role !== "AGENT") {
     throw new AppError(httpStatus.BAD_REQUEST, "Agent is not valid");
+  }
+  if (agent.isAgentApproved !== IsAgentApproved.SUSPENDED) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Agent is suspended!");
   }
 
   // 4. Find wallets
@@ -132,6 +139,9 @@ const cashInOutApprovalFromAgent = async (
   // 2. Ensure agent role
   if (agent.role !== "AGENT") {
     throw new AppError(httpStatus.BAD_REQUEST, "Agent is not valid");
+  }
+  if (agent.isAgentApproved !== IsAgentApproved.SUSPENDED) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Agent is suspended!");
   }
 
   // 3. Find wallets
@@ -273,17 +283,17 @@ const sendMoney = async (
 };
 
 /// View all transactions of an specific user
-const transactionsByWalletId = async(walletId: string)=>{
-const transactionHistory = await Transaction.find({walletId});
+const transactionsByWalletId = async (walletId: string) => {
+  const transactionHistory = await Transaction.find({ walletId });
 
-return transactionHistory;
-}
+  return transactionHistory;
+};
 
 /// Admin -> All transactions history
-const allTransactions = async()=>{
-const allTransactionHistory = await Transaction.find();
-return allTransactionHistory
-}
+const allTransactions = async () => {
+  const allTransactionHistory = await Transaction.find();
+  return allTransactionHistory;
+};
 
 export const TransactionService = {
   // createTransaction
@@ -292,5 +302,5 @@ export const TransactionService = {
   cashInOutApprovalFromAgent,
   sendMoney,
   transactionsByWalletId,
-  allTransactions
+  allTransactions,
 };

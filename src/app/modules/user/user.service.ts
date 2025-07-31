@@ -127,11 +127,16 @@ const updateUser = async (
       throw new AppError(httpStatus.FORBIDDEN, "You are not authorized!!");
     }
 
-    if(payload.role === Role.AGENT){
+    if(payload.role === Role.AGENT && decodedToken.role === Role.USER && payload.isAgentApproved === IsAgentApproved.APPROVED){
+       payload.isAgentApproved = IsAgentApproved.APPROVED;
+    }
+    if(payload.role === Role.AGENT && decodedToken.role === Role.AGENT && payload.isAgentApproved === IsAgentApproved.SUSPENDED){
+       payload.isAgentApproved = IsAgentApproved.SUSPENDED;
+    }
+    if(payload.role === Role.AGENT && decodedToken.role === Role.AGENT && payload.isAgentApproved === IsAgentApproved.APPROVED){
        payload.isAgentApproved = IsAgentApproved.APPROVED;
     }
   }
-
   if (payload.isActive || payload.isDeleted || payload.isVerified) {
     if (decodedToken.role === Role.USER || decodedToken.role === Role.AGENT) {
       throw new AppError(httpStatus.FORBIDDEN, "You are not authorized!!");
