@@ -32,7 +32,7 @@ const transactionSchema = new Schema<ITransaction>(
     },
 
     // These will be used only in SEND_MONEY transactions
-    receiverWalletId: {
+    agentId: {
       type: Schema.Types.ObjectId,
       ref: "Wallet",
     },

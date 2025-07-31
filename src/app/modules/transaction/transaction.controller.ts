@@ -18,7 +18,7 @@ import httpStatus from "http-status-codes";
 // };
 const addMoneyForAgent = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const agentId = req.params.walletId;
+    const agentId = req.params.userId;
     const body = req.body;
     const payload = {
       agentId,
@@ -35,9 +35,45 @@ const addMoneyForAgent = async (req: Request, res: Response, next: NextFunction)
     next(error);
   }
 };
+const cashInOutRequestFromUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.params.userId;
+    const payload = req.body;
+    const decodedToken = req.user;
+    
+    const transaction = await TransactionService.cashInOutRequestFromUser(userId, payload, decodedToken);
+
+    res.status(httpStatus.CREATED).json({
+      success: true,
+      message: `✅ ${payload.transactionType} request placed successfully`,
+      transaction,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+const cashInOutApprovalFromAgent = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const agentId = req.params.userId;
+    const payload = req.body;
+    const decodedToken = req.user;
+    
+    const transaction = await TransactionService.cashInOutApprovalFromAgent(agentId, payload, decodedToken);
+
+    res.status(httpStatus.CREATED).json({
+      success: true,
+      message: `✅ Transaction done and update user wallet successfully`,
+      transaction,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 export const TransactionController = {
   // createTransaction,
-  addMoneyForAgent
+  addMoneyForAgent,
+  cashInOutRequestFromUser,
+  cashInOutApprovalFromAgent,
 };

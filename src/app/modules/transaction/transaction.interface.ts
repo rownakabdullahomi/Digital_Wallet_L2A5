@@ -19,7 +19,7 @@ export interface ITransaction {
   transactionStatus: TransactionStatus;
 
   // for SEND_MONEY or ADD MONEY of user
-  receiverWalletId?: Types.ObjectId;
+  agentId?: Types.ObjectId;
 
 
 

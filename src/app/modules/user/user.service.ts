@@ -5,7 +5,7 @@ import {
 } from "../transaction/transaction.interface";
 import { Transaction } from "../transaction/transaction.model";
 import { Wallet } from "../wallet/wallet.model";
-import { IAuthProvider, IUser, Role } from "./user.interface";
+import { IAuthProvider, IsAgentApproved, IUser, Role } from "./user.interface";
 import { User } from "./user.model";
 import httpStatus from "http-status-codes";
 import bcryptjs from "bcryptjs";
@@ -125,6 +125,10 @@ const updateUser = async (
 
     if (payload.role === Role.SUPER_ADMIN && decodedToken.role === Role.ADMIN) {
       throw new AppError(httpStatus.FORBIDDEN, "You are not authorized!!");
+    }
+
+    if(payload.role === Role.AGENT){
+       payload.isAgentApproved = IsAgentApproved.APPROVED;
     }
   }
 
