@@ -19,12 +19,9 @@ import httpStatus from "http-status-codes";
 const addMoneyForAgent = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const agentId = req.params.userId;
-    const body = req.body;
-    const payload = {
-      agentId,
-      body
-    }
-    const transaction = await TransactionService.addMoneyForAgent(payload);
+    const payload = req.body;
+
+    const transaction = await TransactionService.addMoneyForAgent(agentId, payload);
 
     res.status(httpStatus.CREATED).json({
       success: true,
@@ -86,6 +83,33 @@ const sendMoney = async (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
+const transactionsByWalletId = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const walletId = req.params.walletId;
+    const transactionHistory = await TransactionService.transactionsByWalletId(walletId.toString());
+
+    res.status(httpStatus.OK).json({
+      success: true,
+      message: `✅ Transaction history gained successfully.`,
+      transactionHistory,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+const allTransactions = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const allTransactionHistory = await TransactionService.allTransactions();
+
+    res.status(httpStatus.OK).json({
+      success: true,
+      message: `✅ All transaction history gained successfully.`,
+      allTransactionHistory,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 export const TransactionController = {
@@ -94,4 +118,6 @@ export const TransactionController = {
   cashInOutRequestFromUser,
   cashInOutApprovalFromAgent,
   sendMoney,
+  transactionsByWalletId,
+  allTransactions,
 };

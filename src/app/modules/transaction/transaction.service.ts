@@ -16,14 +16,12 @@ import { JwtPayload } from "jsonwebtoken";
 // }
 
 /// Agent -> add money from admin
-const addMoneyForAgent = async (payload: {
-  agentId: string;
-  body: Partial<ITransaction>;
-}) => {
-  const { agentId, body } = payload;
-
+const addMoneyForAgent = async (
+  agentId: string,
+  payload: Partial<ITransaction>
+) => {
   const { transactionAmount, transactionType, transactionStatus, description } =
-    body;
+    payload;
 
   // 1. Validate required fields
   if (!agentId || !transactionAmount) {
@@ -31,14 +29,13 @@ const addMoneyForAgent = async (payload: {
   }
 
   // 2. Validate agent using reusable utility
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const agent = await validateUserById(agentId);
 
   // 3. Find the agent's wallet
-  const wallet = await Wallet.findOne({ userId: agentId });
+  const wallet = await Wallet.findOne({ userId: agent._id });
 
   if (!wallet) {
-    throw new AppError(httpStatus.NOT_FOUND, "Wallet for this user not found");
+    throw new AppError(httpStatus.NOT_FOUND, "Wallet for this agent not found");
   }
 
   // 4. Create the transaction
@@ -252,10 +249,7 @@ const sendMoney = async (
 
   // 4. Perform balance update logic
   if (senderWallet.balance < transactionAmount) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      "You have insufficient balance"
-    );
+    throw new AppError(httpStatus.BAD_REQUEST, "You have insufficient balance");
   }
 
   senderWallet.balance -= transactionAmount;
@@ -278,10 +272,25 @@ const sendMoney = async (
   return sendMoneyTransaction;
 };
 
+/// View all transactions of an specific user
+const transactionsByWalletId = async(walletId: string)=>{
+const transactionHistory = await Transaction.find({walletId});
+
+return transactionHistory;
+}
+
+/// Admin -> All transactions history
+const allTransactions = async()=>{
+const allTransactionHistory = await Transaction.find();
+return allTransactionHistory
+}
+
 export const TransactionService = {
   // createTransaction
   addMoneyForAgent,
   cashInOutRequestFromUser,
   cashInOutApprovalFromAgent,
   sendMoney,
+  transactionsByWalletId,
+  allTransactions
 };

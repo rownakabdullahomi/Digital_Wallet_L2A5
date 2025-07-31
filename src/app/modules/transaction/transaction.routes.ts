@@ -11,5 +11,7 @@ router.post("/agent-add-money/:userId", checkAuth(Role.AGENT), TransactionContro
 router.post("/user-cash-in-out/:userId", checkAuth(Role.USER), TransactionController.cashInOutRequestFromUser);
 router.post("/cash-in-out-approval-from-agent/:agentId", checkAuth(Role.AGENT), TransactionController.cashInOutApprovalFromAgent);
 router.post("/send-money/:userId", checkAuth(Role.USER), TransactionController.sendMoney);
+router.get("/history/:walletId", checkAuth(Role.USER, Role.AGENT), TransactionController.transactionsByWalletId);
+router.get("/all-history", checkAuth(Role.ADMIN, Role.SUPER_ADMIN), TransactionController.allTransactions);
 
 export const TransactionRoutes = router;
