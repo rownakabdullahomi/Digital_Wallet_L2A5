@@ -69,6 +69,23 @@ const cashInOutApprovalFromAgent = async (req: Request, res: Response, next: Nex
     next(error);
   }
 };
+const sendMoney = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const senderId = req.params.userId;
+    const payload = req.body;
+    const decodedToken = req.user;
+    
+    const transaction = await TransactionService.sendMoney(senderId, payload, decodedToken);
+
+    res.status(httpStatus.CREATED).json({
+      success: true,
+      message: `✅ Send money successful`,
+      transaction,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 export const TransactionController = {
@@ -76,4 +93,5 @@ export const TransactionController = {
   addMoneyForAgent,
   cashInOutRequestFromUser,
   cashInOutApprovalFromAgent,
+  sendMoney,
 };

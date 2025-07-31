@@ -31,8 +31,13 @@ const transactionSchema = new Schema<ITransaction>(
       default: TransactionStatus.PENDING,
     },
 
-    // These will be used only in SEND_MONEY transactions
+    // These will be used only in Add money and withdraw transactions
     agentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Wallet",
+    },
+    // These will be used only in send money user to user
+    receiverId: {
       type: Schema.Types.ObjectId,
       ref: "Wallet",
     },

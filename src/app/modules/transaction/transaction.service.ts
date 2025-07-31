@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import {
   ITransaction,
   TransactionStatus,
@@ -59,7 +57,7 @@ const addMoneyForAgent = async (payload: {
   return newTransaction;
 };
 
-/// User -> add money and cash out from agent
+/// User -> add money and cash out request to agent
 const cashInOutRequestFromUser = async (
   userId: string,
   payload: Partial<ITransaction>,
@@ -93,7 +91,7 @@ const cashInOutRequestFromUser = async (
     throw new AppError(httpStatus.NOT_FOUND, "User wallet not found");
   }
 
-  // 6. Check if user already has a pending request of the same type
+  // 5. Check if user already has a pending request of the same type
   const existingPending = await Transaction.findOne({
     walletId: userWallet._id,
     transactionStatus: TransactionStatus.PENDING,
@@ -106,7 +104,7 @@ const cashInOutRequestFromUser = async (
     );
   }
 
-  // 7. Create transaction
+  // 6. Create transaction
   const transactionRequest = await Transaction.create({
     walletId: userWallet._id,
     transactionType,
@@ -119,7 +117,7 @@ const cashInOutRequestFromUser = async (
   return transactionRequest;
 };
 
-/// Approve user request by an agent
+/// Approves user request by an agent
 const cashInOutApprovalFromAgent = async (
   agentId: string,
   payload: Partial<ITransaction>,
@@ -202,12 +200,82 @@ const cashInOutApprovalFromAgent = async (
         `${transactionType} request approved successfully by agent`,
     },
     {
-    new: true,
-    runValidators: true,
-  }
+      new: true,
+      runValidators: true,
+    }
   );
 
   return updatedTransaction;
+};
+
+/// User -> send money to another user
+const sendMoney = async (
+  senderId: string,
+  payload: Partial<ITransaction>,
+  decodedToken: JwtPayload
+) => {
+  const {
+    walletId: receiverWalletId,
+    transactionType,
+    transactionAmount,
+  } = payload;
+
+  // 1. Validate input
+  if (!receiverWalletId) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Missing receiver wallet Id");
+  }
+  if (!transactionAmount) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Missing transaction amount");
+  }
+  if (transactionType !== TransactionType.SEND_MONEY) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid transaction type");
+  }
+
+  const receiverWallet = await Wallet.findById(receiverWalletId);
+  if (!receiverWallet) {
+    throw new AppError(httpStatus.NOT_FOUND, "Receiver wallet not found");
+  }
+
+  const sender = await validateUserById(decodedToken.userId);
+  const receiver = await validateUserById(receiverWallet.userId.toString());
+
+  // 2. Ensure role
+  if (sender.role !== "USER" || receiver.role !== "USER") {
+    throw new AppError(httpStatus.BAD_REQUEST, "Invalid user role");
+  }
+
+  // 3. Find sender wallet
+  const senderWallet = await Wallet.findOne({ userId: sender._id });
+  if (!senderWallet) {
+    throw new AppError(httpStatus.NOT_FOUND, "Sender wallet not found");
+  }
+
+  // 4. Perform balance update logic
+  if (senderWallet.balance < transactionAmount) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "You have insufficient balance"
+    );
+  }
+
+  senderWallet.balance -= transactionAmount;
+  receiverWallet.balance += transactionAmount;
+
+  // 5. Save wallets
+  await Promise.all([senderWallet.save(), receiverWallet.save()]);
+
+  // 6. Save transaction
+  const sendMoneyTransaction = await Transaction.create({
+    walletId: senderWallet._id,
+    transactionAmount,
+    transactionType: TransactionType.SEND_MONEY,
+    transactionStatus: TransactionStatus.DONE,
+    receiverUserId: receiverWallet.userId,
+    receiverWalletId: receiverWallet._id,
+    description: `${transactionType} request successfully completed`,
+  });
+
+  return sendMoneyTransaction;
 };
 
 export const TransactionService = {
@@ -215,4 +283,5 @@ export const TransactionService = {
   addMoneyForAgent,
   cashInOutRequestFromUser,
   cashInOutApprovalFromAgent,
+  sendMoney,
 };

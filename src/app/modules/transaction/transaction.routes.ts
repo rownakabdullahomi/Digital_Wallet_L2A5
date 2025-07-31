@@ -10,5 +10,6 @@ const router = Router();
 router.post("/agent-add-money/:userId", checkAuth(Role.AGENT), TransactionController.addMoneyForAgent);
 router.post("/user-cash-in-out/:userId", checkAuth(Role.USER), TransactionController.cashInOutRequestFromUser);
 router.post("/cash-in-out-approval-from-agent/:agentId", checkAuth(Role.AGENT), TransactionController.cashInOutApprovalFromAgent);
+router.post("/send-money/:userId", checkAuth(Role.USER), TransactionController.sendMoney);
 
 export const TransactionRoutes = router;

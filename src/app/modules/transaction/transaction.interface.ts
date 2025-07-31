@@ -10,6 +10,7 @@ export enum TransactionStatus {
   PENDING = "PENDING",
   APPROVED = "APPROVED",
   DECLINED = "DECLINED",
+  DONE = "DONE",
 }
 
 export interface ITransaction {
@@ -18,10 +19,10 @@ export interface ITransaction {
   transactionAmount: number;
   transactionStatus: TransactionStatus;
 
-  // for SEND_MONEY or ADD MONEY of user
+  // for SEND_MONEY
   agentId?: Types.ObjectId;
-
-
+  // ADD MONEY of user
+  receiverId?: Types.ObjectId;
 
   // Optional: status & meta info
   description?: string;
