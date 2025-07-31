@@ -18,9 +18,10 @@ export interface ITransaction {
   transactionAmount: number;
   transactionStatus: TransactionStatus;
 
-  // Optional fields for SEND_MONEY
-  receiverUserId?: Types.ObjectId;
+  // for SEND_MONEY or ADD MONEY of user
   receiverWalletId?: Types.ObjectId;
+
+
 
   // Optional: status & meta info
   description?: string;
