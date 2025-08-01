@@ -11,6 +11,7 @@ import { validateUserById } from "../../utils/validateUserById";
 import { JwtPayload } from "jsonwebtoken";
 import { IsAgentApproved } from "../user/user.interface";
 import { WalletStatus } from "../wallet/wallet.interface";
+import { CommissionRate } from "../commissionRate/commissionRate.model";
 
 // const createTransaction = async (payload: Partial<ITransaction>) => {
 //     const transaction = await Transaction.create(payload);
@@ -61,7 +62,6 @@ const addMoneyForAgent = async (
 
 /// User -> add money and cash out request to agent
 const cashInOutRequestFromUser = async (
-  userId: string,
   payload: Partial<ITransaction>,
   decodedToken: JwtPayload
 ) => {
@@ -76,7 +76,7 @@ const cashInOutRequestFromUser = async (
   // const user = await validateUserById(userId);
   // const agent = await validateUserById(agentId);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
   const [user, agent] = await Promise.all([
     validateUserById(decodedToken.userId),
     validateUserById(agentId.toString()),
@@ -86,12 +86,12 @@ const cashInOutRequestFromUser = async (
   if (agent.role !== "AGENT") {
     throw new AppError(httpStatus.BAD_REQUEST, "Agent is not valid");
   }
-  if (agent.isAgentApproved !== IsAgentApproved.SUSPENDED) {
+  if (agent.isAgentApproved === IsAgentApproved.SUSPENDED) {
     throw new AppError(httpStatus.BAD_REQUEST, "Agent is suspended!");
   }
 
   // 4. Find wallets
-  const userWallet = await Wallet.findOne({ userId });
+  const userWallet = await Wallet.findOne({ userId: user._id });
   if (!userWallet) {
     throw new AppError(httpStatus.NOT_FOUND, "User wallet not found");
   }
@@ -128,7 +128,6 @@ const cashInOutRequestFromUser = async (
 
 /// Approves user request by an agent
 const cashInOutApprovalFromAgent = async (
-  agentId: string,
   payload: Partial<ITransaction>,
   decodedToken: JwtPayload
 ) => {
@@ -141,11 +140,12 @@ const cashInOutApprovalFromAgent = async (
 
   const agent = await validateUserById(decodedToken.userId);
 
+
   // 2. Ensure agent role
   if (agent.role !== "AGENT") {
     throw new AppError(httpStatus.BAD_REQUEST, "Agent is not valid");
   }
-  if (agent.isAgentApproved !== IsAgentApproved.SUSPENDED) {
+  if (agent.isAgentApproved === IsAgentApproved.SUSPENDED) {
     throw new AppError(httpStatus.BAD_REQUEST, "Agent is suspended!");
   }
 
@@ -178,6 +178,13 @@ const cashInOutApprovalFromAgent = async (
   const { transactionType, transactionAmount, description } =
     pendingTransaction;
 
+    // calculate commission
+    const commissionRateData = await CommissionRate.findOne();
+    
+    if(!commissionRateData) throw new AppError(httpStatus.NOT_FOUND, "Commission rate not found.")
+    const commission = transactionAmount * commissionRateData.rate;
+
+
   // 5. Perform balance update logic
   if (transactionType === TransactionType.ADD_MONEY) {
     if (agentWallet.balance < transactionAmount) {
@@ -187,20 +194,21 @@ const cashInOutApprovalFromAgent = async (
       );
     }
 
+    
     agentWallet.balance -= transactionAmount;
     userWallet.balance += transactionAmount;
   }
 
   if (transactionType === TransactionType.WITHDRAW) {
-    if (userWallet.balance < transactionAmount) {
+    if (userWallet.balance < transactionAmount + commission) {
       throw new AppError(
         httpStatus.BAD_REQUEST,
         "User has insufficient balance"
       );
     }
-
-    userWallet.balance -= transactionAmount;
-    agentWallet.balance += transactionAmount;
+    pendingTransaction.transactionAmount += commission
+    userWallet.balance = userWallet.balance - (transactionAmount + commission);
+    agentWallet.balance = (agentWallet.balance + transactionAmount) + commission;
   }
 
   // 6. Save wallets
@@ -210,6 +218,7 @@ const cashInOutApprovalFromAgent = async (
   const updatedTransaction = await Transaction.findByIdAndUpdate(
     pendingTransaction._id,
     {
+      transactionAmount: pendingTransaction.transactionAmount,
       transactionStatus: TransactionStatus.APPROVED,
       description:
         description ||
@@ -226,7 +235,6 @@ const cashInOutApprovalFromAgent = async (
 
 /// User -> send money to another user
 const sendMoney = async (
-  senderId: string,
   payload: Partial<ITransaction>,
   decodedToken: JwtPayload
 ) => {

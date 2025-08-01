@@ -13,6 +13,7 @@ import envVars from "../../config/env";
 import { isValidObjectId } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
 import { WalletStatus } from "../wallet/wallet.interface";
+import { CommissionRate } from "../commissionRate/commissionRate.model";
 
 const createUser = async (payload: Partial<IUser>) => {
   const { email, password, ...rest } = payload;
@@ -131,28 +132,34 @@ const updateUser = async (
 
     if (
       payload.role === Role.AGENT &&
-      decodedToken.role === Role.USER &&
+      isUserExist.role === Role.USER &&
       payload.isAgentApproved === IsAgentApproved.APPROVED
     ) {
       payload.isAgentApproved = IsAgentApproved.APPROVED;
 
+      // Fetch the commission rate from the DB
+      const commission = await CommissionRate.findOne();
+      if (!commission) throw new AppError(httpStatus.NOT_FOUND, "Commission rate not found!!");
+         
+      payload.commissionRate = commission.rate;
+
       // Remove walletStatus from wallet when user becomes an approved agent
       await Wallet.updateOne(
-        { userId: decodedToken.userId },
+        { userId: isUserExist._id },
         { $unset: { walletStatus: "" } }
       );
     }
 
     if (
       payload.role === Role.AGENT &&
-      decodedToken.role === Role.AGENT &&
+      isUserExist.role === Role.AGENT &&
       payload.isAgentApproved === IsAgentApproved.SUSPENDED
     ) {
       payload.isAgentApproved = IsAgentApproved.SUSPENDED;
     }
     if (
       payload.role === Role.AGENT &&
-      decodedToken.role === Role.AGENT &&
+      isUserExist.role === Role.AGENT &&
       payload.isAgentApproved === IsAgentApproved.APPROVED
     ) {
       payload.isAgentApproved = IsAgentApproved.APPROVED;

@@ -34,11 +34,10 @@ const addMoneyForAgent = async (req: Request, res: Response, next: NextFunction)
 };
 const cashInOutRequestFromUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = req.params.userId;
     const payload = req.body;
     const decodedToken = req.user;
     
-    const transaction = await TransactionService.cashInOutRequestFromUser(userId, payload, decodedToken);
+    const transaction = await TransactionService.cashInOutRequestFromUser(payload, decodedToken);
 
     res.status(httpStatus.CREATED).json({
       success: true,
@@ -51,11 +50,10 @@ const cashInOutRequestFromUser = async (req: Request, res: Response, next: NextF
 };
 const cashInOutApprovalFromAgent = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const agentId = req.params.userId;
     const payload = req.body;
     const decodedToken = req.user;
     
-    const transaction = await TransactionService.cashInOutApprovalFromAgent(agentId, payload, decodedToken);
+    const transaction = await TransactionService.cashInOutApprovalFromAgent(payload, decodedToken);
 
     res.status(httpStatus.CREATED).json({
       success: true,
@@ -68,11 +66,10 @@ const cashInOutApprovalFromAgent = async (req: Request, res: Response, next: Nex
 };
 const sendMoney = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const senderId = req.params.userId;
     const payload = req.body;
     const decodedToken = req.user;
     
-    const transaction = await TransactionService.sendMoney(senderId, payload, decodedToken);
+    const transaction = await TransactionService.sendMoney(payload, decodedToken);
 
     res.status(httpStatus.CREATED).json({
       success: true,

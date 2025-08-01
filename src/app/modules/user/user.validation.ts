@@ -34,6 +34,11 @@ export const createUserZodSchema = z.object({
     .string({ message: "Address must be string" })
     .max(200, { message: "Address cannot exceed 200 characters." })
     .optional(),
+  commissionRate: z
+    .number({ message: "Commission rate must be a number" })
+    .min(0.01, {message: "Commission rate can not be less than 0.01%"})
+    .max(100, { message: "Commission rate can not be more than 100%" })
+    .optional(),
 });
 
 export const updateUserZodSchema = z.object({
@@ -75,5 +80,9 @@ export const updateUserZodSchema = z.object({
     .boolean({ message: "isVerified must be true or false" })
     .optional(),
   isAgentApproved: z.enum(Object.values(IsAgentApproved) as [string]).optional(),
-  commissionRate: z.number({ message: "isApproved must be number" }).optional(),
+  commissionRate: z
+    .number({ message: "Commission rate must be a number" })
+    .min(0.01, {message: "Commission rate can not be less than 0.01%"})
+    .max(100, { message: "Commission rate can not be more than 100%" })
+    .optional(),
 });

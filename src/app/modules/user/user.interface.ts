@@ -12,6 +12,8 @@ export interface IAuthProvider {
   providerId: string;
 }
 
+
+
 export enum IsActive {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
