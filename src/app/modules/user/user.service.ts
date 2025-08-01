@@ -12,6 +12,7 @@ import bcryptjs from "bcryptjs";
 import envVars from "../../config/env";
 import { isValidObjectId } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
+import { WalletStatus } from "../wallet/wallet.interface";
 
 const createUser = async (payload: Partial<IUser>) => {
   const { email, password, ...rest } = payload;
@@ -56,6 +57,7 @@ const createUser = async (payload: Partial<IUser>) => {
     transactionType: TransactionType.ADD_MONEY,
     transactionStatus: TransactionStatus.APPROVED,
     transactionAmount: 50,
+    walletStatus: WalletStatus.ACTIVE,
     description: "Initial wallet creation balance",
   });
 
@@ -127,14 +129,33 @@ const updateUser = async (
       throw new AppError(httpStatus.FORBIDDEN, "You are not authorized!!");
     }
 
-    if(payload.role === Role.AGENT && decodedToken.role === Role.USER && payload.isAgentApproved === IsAgentApproved.APPROVED){
-       payload.isAgentApproved = IsAgentApproved.APPROVED;
+    if (
+      payload.role === Role.AGENT &&
+      decodedToken.role === Role.USER &&
+      payload.isAgentApproved === IsAgentApproved.APPROVED
+    ) {
+      payload.isAgentApproved = IsAgentApproved.APPROVED;
+
+      // Remove walletStatus from wallet when user becomes an approved agent
+      await Wallet.updateOne(
+        { userId: decodedToken.userId },
+        { $unset: { walletStatus: "" } }
+      );
     }
-    if(payload.role === Role.AGENT && decodedToken.role === Role.AGENT && payload.isAgentApproved === IsAgentApproved.SUSPENDED){
-       payload.isAgentApproved = IsAgentApproved.SUSPENDED;
+
+    if (
+      payload.role === Role.AGENT &&
+      decodedToken.role === Role.AGENT &&
+      payload.isAgentApproved === IsAgentApproved.SUSPENDED
+    ) {
+      payload.isAgentApproved = IsAgentApproved.SUSPENDED;
     }
-    if(payload.role === Role.AGENT && decodedToken.role === Role.AGENT && payload.isAgentApproved === IsAgentApproved.APPROVED){
-       payload.isAgentApproved = IsAgentApproved.APPROVED;
+    if (
+      payload.role === Role.AGENT &&
+      decodedToken.role === Role.AGENT &&
+      payload.isAgentApproved === IsAgentApproved.APPROVED
+    ) {
+      payload.isAgentApproved = IsAgentApproved.APPROVED;
     }
   }
   if (payload.isActive || payload.isDeleted || payload.isVerified) {

@@ -10,6 +10,7 @@ import { Wallet } from "../wallet/wallet.model";
 import { validateUserById } from "../../utils/validateUserById";
 import { JwtPayload } from "jsonwebtoken";
 import { IsAgentApproved } from "../user/user.interface";
+import { WalletStatus } from "../wallet/wallet.interface";
 
 // const createTransaction = async (payload: Partial<ITransaction>) => {
 //     const transaction = await Transaction.create(payload);
@@ -95,6 +96,10 @@ const cashInOutRequestFromUser = async (
     throw new AppError(httpStatus.NOT_FOUND, "User wallet not found");
   }
 
+  // Check wallet is blocked or not
+  if (userWallet.walletStatus === WalletStatus.BLOCKED)
+    throw new AppError(httpStatus.NOT_FOUND, "User wallet is blocked");
+
   // 5. Check if user already has a pending request of the same type
   const existingPending = await Transaction.findOne({
     walletId: userWallet._id,
@@ -149,6 +154,10 @@ const cashInOutApprovalFromAgent = async (
   if (!userWallet) {
     throw new AppError(httpStatus.NOT_FOUND, "User wallet not found");
   }
+  // Check wallet is blocked or not
+  if (userWallet.walletStatus === WalletStatus.BLOCKED)
+    throw new AppError(httpStatus.NOT_FOUND, "User wallet is blocked");
+
   const agentWallet = await Wallet.findOne({ userId: agent._id });
 
   if (!agentWallet) {
@@ -243,6 +252,10 @@ const sendMoney = async (
     throw new AppError(httpStatus.NOT_FOUND, "Receiver wallet not found");
   }
 
+  // Check wallet is blocked or not
+  if (receiverWallet.walletStatus === WalletStatus.BLOCKED)
+    throw new AppError(httpStatus.NOT_FOUND, "Receiver wallet is blocked");
+
   const sender = await validateUserById(decodedToken.userId);
   const receiver = await validateUserById(receiverWallet.userId.toString());
 
@@ -256,6 +269,9 @@ const sendMoney = async (
   if (!senderWallet) {
     throw new AppError(httpStatus.NOT_FOUND, "Sender wallet not found");
   }
+  // Check wallet is blocked or not
+  if (senderWallet.walletStatus === WalletStatus.BLOCKED)
+    throw new AppError(httpStatus.NOT_FOUND, "Sender wallet is blocked");
 
   // 4. Perform balance update logic
   if (senderWallet.balance < transactionAmount) {
