@@ -23,6 +23,10 @@ const transactionSchema = new Schema<ITransaction>(
       required: true,
       min: 10,
     },
+    commissionAmount: {
+      type: Number,
+      min: 0,
+    },
 
     transactionStatus: {
       type: String,

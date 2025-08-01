@@ -21,6 +21,8 @@ export interface ITransaction {
 
   // for SEND_MONEY
   agentId?: Types.ObjectId;
+  //  for commission
+  commissionAmount?: number;
   // ADD MONEY of user
   receiverId?: Types.ObjectId;
 

@@ -219,6 +219,7 @@ const cashInOutApprovalFromAgent = async (
     pendingTransaction._id,
     {
       transactionAmount: pendingTransaction.transactionAmount,
+      commissionAmount: commission,
       transactionStatus: TransactionStatus.APPROVED,
       description:
         description ||
