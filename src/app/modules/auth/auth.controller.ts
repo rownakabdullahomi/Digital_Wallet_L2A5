@@ -6,6 +6,7 @@ import httpStatus from 'http-status-codes';
 import { AuthService } from "./auth.service";
 import AppError from "../../error/AppError";
 import { setAuthCookie } from "../../utils/setCookie";
+import { JwtPayload } from "jsonwebtoken";
 
 
 const credentialsLogin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -65,8 +66,23 @@ const logout = catchAsync(
   }
 );
 
+const resetPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+
+    const decodedToken = req.user
+
+    await AuthService.resetPassword(req.body, decodedToken as JwtPayload);
+
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: "Password Changed Successfully",
+        data: null,
+    })
+})
+
 export const AuthController = {
     credentialsLogin,
     getNewAccessToken,
     logout,
+    resetPassword,
 }

@@ -10,10 +10,12 @@ export enum TransactionStatus {
   PENDING = "PENDING",
   APPROVED = "APPROVED",
   DECLINED = "DECLINED",
+  REVERSED = "REVERSED",
   DONE = "DONE",
 }
 
 export interface ITransaction {
+  _id: Types.ObjectId;
   walletId: Types.ObjectId; // Whose wallet was used
   transactionType: TransactionType;
   transactionAmount: number;

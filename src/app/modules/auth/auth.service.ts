@@ -1,9 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import AppError from "../../error/AppError";
 import { IUser } from "../user/user.interface";
 import { User } from "../user/user.model";
 import httpStatus from "http-status-codes";
 import bcryptjs from "bcryptjs";
 import { createNewAccessTokenWithRefreshToken, createUserTokens } from "../../utils/userTokens";
+import envVars from "../../config/env";
+import { JwtPayload } from "jsonwebtoken";
+import { validateUserById } from "../../utils/validateUserById";
 
 const credentialsLogin = async (payload: Partial<IUser>) => {
   const { email, password } = payload;
@@ -66,7 +70,23 @@ const getNewAccessToken = async (refreshToken: string) => {
   };
 };
 
+const resetPassword = async (payload: Record<string, any>, decodedToken: JwtPayload) => {
+ 
+    // const isUserExist = await User.findById(decodedToken.userId)
+    const isUserExist = await validateUserById(decodedToken.userId)
+
+    const hashedPassword = await bcryptjs.hash(
+        payload.newPassword,
+        Number(envVars.BCRYPT_SALT_ROUND)
+    )
+
+    isUserExist.password = hashedPassword;
+
+    await isUserExist.save()
+}
+
 export const AuthService = {
   credentialsLogin,
-  getNewAccessToken
+  getNewAccessToken,
+  resetPassword
 };

@@ -14,6 +14,8 @@ import { isValidObjectId } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
 import { WalletStatus } from "../wallet/wallet.interface";
 import { CommissionRate } from "../commissionRate/commissionRate.model";
+import { createWalletZodSchema } from "../wallet/wallet.validation";
+
 
 const createUser = async (payload: Partial<IUser>) => {
   const { email, password, ...rest } = payload;
@@ -44,10 +46,16 @@ const createUser = async (payload: Partial<IUser>) => {
   if (!user) throw new AppError(httpStatus.NOT_FOUND, "User not found");
 
   //> Step 2: Create wallet with initial balance (৳50)
-  const wallet = await Wallet.create({
-    userId: user._id,
-    balance: 50,
-  });
+
+// Validate input manually
+const walletInput = createWalletZodSchema.parse({
+  userId: user._id.toString(),
+  balance: 50,
+  walletStatus: WalletStatus.ACTIVE,
+});
+
+// Then create wallet
+const wallet = await Wallet.create(walletInput);
 
   if (!wallet) throw new AppError(httpStatus.NOT_FOUND, "Wallet not found");
 

@@ -12,6 +12,7 @@ import { JwtPayload } from "jsonwebtoken";
 import { IsAgentApproved } from "../user/user.interface";
 import { WalletStatus } from "../wallet/wallet.interface";
 import { CommissionRate } from "../commissionRate/commissionRate.model";
+import mongoose from "mongoose";
 
 // const createTransaction = async (payload: Partial<ITransaction>) => {
 //     const transaction = await Transaction.create(payload);
@@ -127,112 +128,124 @@ const cashInOutRequestFromUser = async (
 };
 
 /// Approves user request by an agent
+
 const cashInOutApprovalFromAgent = async (
   payload: Partial<ITransaction>,
   decodedToken: JwtPayload
 ) => {
-  const { walletId: userWalletId } = payload;
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  // 1. Validate input
-  if (!userWalletId) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Missing user wallet Id");
-  }
+  let pendingTransaction: ITransaction | null = null;
 
-  const agent = await validateUserById(decodedToken.userId);
+  try {
+    const { walletId: userWalletId } = payload;
 
+    if (!userWalletId) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Missing user wallet Id");
+    }
 
-  // 2. Ensure agent role
-  if (agent.role !== "AGENT") {
-    throw new AppError(httpStatus.BAD_REQUEST, "Agent is not valid");
-  }
-  if (agent.isAgentApproved === IsAgentApproved.SUSPENDED) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Agent is suspended!");
-  }
+    const agent = await validateUserById(decodedToken.userId);
 
-  // 3. Find wallets
-  const userWallet = await Wallet.findOne({ _id: userWalletId });
-  if (!userWallet) {
-    throw new AppError(httpStatus.NOT_FOUND, "User wallet not found");
-  }
-  // Check wallet is blocked or not
-  if (userWallet.walletStatus === WalletStatus.BLOCKED)
-    throw new AppError(httpStatus.NOT_FOUND, "User wallet is blocked");
+    if (agent.role !== "AGENT") {
+      throw new AppError(httpStatus.BAD_REQUEST, "Agent is not valid");
+    }
 
-  const agentWallet = await Wallet.findOne({ userId: agent._id });
+    if (agent.isAgentApproved === IsAgentApproved.SUSPENDED) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Agent is suspended!");
+    }
 
-  if (!agentWallet) {
-    throw new AppError(httpStatus.NOT_FOUND, "Agent wallet not found");
-  }
+    const userWallet = await Wallet.findOne({ _id: userWalletId }).session(session);
+    if (!userWallet) throw new AppError(httpStatus.NOT_FOUND, "User wallet not found");
 
-  // 4. Find the user's pending transaction to this agent
-  const pendingTransaction = await Transaction.findOne({
-    walletId: userWalletId,
-    agentId: agent._id,
-    transactionStatus: TransactionStatus.PENDING,
-  });
+    if (userWallet.walletStatus === WalletStatus.BLOCKED)
+      throw new AppError(httpStatus.NOT_FOUND, "User wallet is blocked");
 
-  if (!pendingTransaction) {
-    throw new AppError(httpStatus.NOT_FOUND, "No pending request found");
-  }
+    const agentWallet = await Wallet.findOne({ userId: agent._id }).session(session);
+    if (!agentWallet) throw new AppError(httpStatus.NOT_FOUND, "Agent wallet not found");
 
-  const { transactionType, transactionAmount, description } =
-    pendingTransaction;
+    pendingTransaction = await Transaction.findOne({
+      walletId: userWalletId,
+      agentId: agent._id,
+      transactionStatus: TransactionStatus.PENDING,
+    }).session(session);
 
-    // calculate commission
-    const commissionRateData = await CommissionRate.findOne();
-    
-    if(!commissionRateData) throw new AppError(httpStatus.NOT_FOUND, "Commission rate not found.")
+    if (!pendingTransaction) {
+      throw new AppError(httpStatus.NOT_FOUND, "No pending request found");
+    }
+
+    const { transactionType, transactionAmount, description } = pendingTransaction;
+
+    const commissionRateData = await CommissionRate.findOne().session(session);
+    if (!commissionRateData) throw new AppError(httpStatus.NOT_FOUND, "Commission rate not found");
+
     const commission = transactionAmount * commissionRateData.rate;
 
+    if (transactionType === TransactionType.ADD_MONEY) {
+      if (agentWallet.balance < transactionAmount) {
+        throw new AppError(httpStatus.BAD_REQUEST, "Agent has insufficient balance");
+      }
 
-  // 5. Perform balance update logic
-  if (transactionType === TransactionType.ADD_MONEY) {
-    if (agentWallet.balance < transactionAmount) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "Agent has insufficient balance"
+      agentWallet.balance -= transactionAmount;
+      userWallet.balance += transactionAmount;
+    }
+
+    if (transactionType === TransactionType.WITHDRAW) {
+      if (userWallet.balance < transactionAmount + commission) {
+        throw new AppError(httpStatus.BAD_REQUEST, "User has insufficient balance");
+      }
+
+      pendingTransaction.transactionAmount += commission;
+      userWallet.balance -= transactionAmount + commission;
+      agentWallet.balance += transactionAmount + commission;
+    }
+
+    await Promise.all([
+      agentWallet.save({ session }),
+      userWallet.save({ session }),
+    ]);
+
+    const updatedTransaction = await Transaction.findByIdAndUpdate(
+      pendingTransaction._id,
+      {
+        transactionAmount: pendingTransaction.transactionAmount,
+        commissionAmount: commission,
+        transactionStatus: TransactionStatus.APPROVED,
+        description:
+          description || `${transactionType} request approved successfully by agent`,
+      },
+      {
+        new: true,
+        runValidators: true,
+        session,
+      }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return updatedTransaction;
+  } catch (error) {
+    if (pendingTransaction) {
+      //  REVERSED
+      await Transaction.findByIdAndUpdate(
+        pendingTransaction._id,
+        {
+          transactionStatus: TransactionStatus.REVERSED,
+          description: "Transaction was reversed due to an internal error.",
+        },
+        { session }
       );
     }
 
-    
-    agentWallet.balance -= transactionAmount;
-    userWallet.balance += transactionAmount;
+    await session.abortTransaction();
+    session.endSession();
+
+    throw error;
   }
-
-  if (transactionType === TransactionType.WITHDRAW) {
-    if (userWallet.balance < transactionAmount + commission) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "User has insufficient balance"
-      );
-    }
-    pendingTransaction.transactionAmount += commission
-    userWallet.balance = userWallet.balance - (transactionAmount + commission);
-    agentWallet.balance = (agentWallet.balance + transactionAmount) + commission;
-  }
-
-  // 6. Save wallets
-  await Promise.all([agentWallet.save(), userWallet.save()]);
-
-  // 7. Update transaction
-  const updatedTransaction = await Transaction.findByIdAndUpdate(
-    pendingTransaction._id,
-    {
-      transactionAmount: pendingTransaction.transactionAmount,
-      commissionAmount: commission,
-      transactionStatus: TransactionStatus.APPROVED,
-      description:
-        description ||
-        `${transactionType} request approved successfully by agent`,
-    },
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
-
-  return updatedTransaction;
 };
+
+
 
 /// User -> send money to another user
 const sendMoney = async (
