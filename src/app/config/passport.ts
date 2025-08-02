@@ -52,9 +52,10 @@ passport.use(
         );
 
         if (isGoogleAuthenticated && !isUserExist.password) {
-          return done(
-            "You have authenticated by Google login. If you want to login with credentials, then at first login with google and set a password"
-          );
+          return done(null, false, {
+            message:
+              "You have authenticated by Google login. If you want to login with credentials, then at first login with Google and set a password",
+          });
         }
 
         const isPasswordMatched = await bcryptjs.compare(
@@ -125,7 +126,7 @@ passport.use(
             isVerified: true,
             auths: [
               {
-                provider: "google",
+                provider: "Google",
                 providerId: profile.id,
               },
             ],

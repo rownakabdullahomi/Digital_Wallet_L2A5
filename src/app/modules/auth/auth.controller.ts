@@ -27,7 +27,7 @@ const credentialsLogin = catchAsync(
     passport.authenticate("local", async (error: any, user: any, info: any) => {
       if (error) {
         // return next(error)
-        return next(new AppError(error.statusCode || 401, error.message));
+        return next(new AppError(error.statusCode || 401, error));
       }
 
       if (!user) {
