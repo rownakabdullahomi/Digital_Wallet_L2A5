@@ -17,34 +17,14 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
   if (!isUserExist)
     throw new AppError(httpStatus.BAD_REQUEST, "User does not exist.");
 
+
   const isPasswordMatched = await bcryptjs.compare(
     password as string,
-    isUserExist.password
+    isUserExist.password as string
   );
 
   if (!isPasswordMatched)
     throw new AppError(httpStatus.BAD_REQUEST, "Incorrect Password");
-
-//   const jwtPayload = {
-//     userId: isUserExist._id,
-//     email: isUserExist.email,
-//     role: isUserExist.role,
-//   };
-
-  //   const accessToken = jwt.sign(jwtPayload, envVars.JWT_ACCESS_SECRET, {expiresIn: envVars.JWT_ACCESS_EXPIRES} as SignOptions)
-
-
-//   const accessToken = generateToken(
-//     jwtPayload,
-//     envVars.JWT_ACCESS_SECRET,
-//     envVars.JWT_ACCESS_EXPIRES
-//   );
-//   const refreshToken = generateToken(
-//     jwtPayload,
-//     envVars.JWT_REFRESH_SECRET,
-//     envVars.JWT_REFRESH_EXPIRES
-//   );
-
 
     const userTokens = createUserTokens(isUserExist)
 

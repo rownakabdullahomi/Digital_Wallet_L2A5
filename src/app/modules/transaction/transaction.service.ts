@@ -128,7 +128,6 @@ const cashInOutRequestFromUser = async (
 };
 
 /// Approves user request by an agent
-
 const cashInOutApprovalFromAgent = async (
   payload: Partial<ITransaction>,
   decodedToken: JwtPayload
@@ -244,8 +243,6 @@ const cashInOutApprovalFromAgent = async (
     throw error;
   }
 };
-
-
 
 /// User -> send money to another user
 const sendMoney = async (

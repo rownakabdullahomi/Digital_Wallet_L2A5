@@ -22,7 +22,8 @@ export const createUserZodSchema = z.object({
     })
     .regex(/^(?=.*\d)/, {
       message: "Password must contain at least 1 number.",
-    }),
+    })
+    .optional(),
   phone: z
     .string({ message: "Phone Number must be string" })
     .regex(/^(?:\+8801\d{9}|01\d{9})$/, {
@@ -36,7 +37,7 @@ export const createUserZodSchema = z.object({
     .optional(),
   commissionRate: z
     .number({ message: "Commission rate must be a number" })
-    .min(0.01, {message: "Commission rate can not be less than 0.01%"})
+    .min(0.01, { message: "Commission rate can not be less than 0.01%" })
     .max(100, { message: "Commission rate can not be more than 100%" })
     .optional(),
 });
@@ -79,10 +80,12 @@ export const updateUserZodSchema = z.object({
   isVerified: z
     .boolean({ message: "isVerified must be true or false" })
     .optional(),
-  isAgentApproved: z.enum(Object.values(IsAgentApproved) as [string]).optional(),
+  isAgentApproved: z
+    .enum(Object.values(IsAgentApproved) as [string])
+    .optional(),
   commissionRate: z
     .number({ message: "Commission rate must be a number" })
-    .min(0.01, {message: "Commission rate can not be less than 0.01%"})
+    .min(0.01, { message: "Commission rate can not be less than 0.01%" })
     .max(100, { message: "Commission rate can not be more than 100%" })
     .optional(),
 });
