@@ -1,43 +1,40 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import AppError from "../../error/AppError";
-import { IUser } from "../user/user.interface";
-import { User } from "../user/user.model";
-import httpStatus from "http-status-codes";
+
 import bcryptjs from "bcryptjs";
-import { createNewAccessTokenWithRefreshToken, createUserTokens } from "../../utils/userTokens";
+import { createNewAccessTokenWithRefreshToken } from "../../utils/userTokens";
 import envVars from "../../config/env";
 import { JwtPayload } from "jsonwebtoken";
 import { validateUserById } from "../../utils/validateUserById";
 
-const credentialsLogin = async (payload: Partial<IUser>) => {
-  const { email, password } = payload;
+// const credentialsLogin = async (payload: Partial<IUser>) => {
+//   const { email, password } = payload;
 
-  const isUserExist = await User.findOne({ email });
+//   const isUserExist = await User.findOne({ email });
 
-  if (!isUserExist)
-    throw new AppError(httpStatus.BAD_REQUEST, "User does not exist.");
-
-
-  const isPasswordMatched = await bcryptjs.compare(
-    password as string,
-    isUserExist.password as string
-  );
-
-  if (!isPasswordMatched)
-    throw new AppError(httpStatus.BAD_REQUEST, "Incorrect Password");
-
-    const userTokens = createUserTokens(isUserExist)
+//   if (!isUserExist)
+//     throw new AppError(httpStatus.BAD_REQUEST, "User does not exist.");
 
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const {password: _password, ...rest} = isUserExist.toObject();
+//   const isPasswordMatched = await bcryptjs.compare(
+//     password as string,
+//     isUserExist.password as string
+//   );
 
-  return {
-    accessToken: userTokens.accessToken,
-    refreshToken: userTokens.refreshToken,
-    user: rest,
-  };
-};
+//   if (!isPasswordMatched)
+//     throw new AppError(httpStatus.BAD_REQUEST, "Incorrect Password");
+
+//     const userTokens = createUserTokens(isUserExist)
+
+
+//   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+//   const {password: _password, ...rest} = isUserExist.toObject();
+
+//   return {
+//     accessToken: userTokens.accessToken,
+//     refreshToken: userTokens.refreshToken,
+//     user: rest,
+//   };
+// };
 
 
 const getNewAccessToken = async (refreshToken: string) => {
@@ -66,7 +63,7 @@ const resetPassword = async (payload: Record<string, any>, decodedToken: JwtPayl
 }
 
 export const AuthService = {
-  credentialsLogin,
+  // credentialsLogin,
   getNewAccessToken,
   resetPassword
 };
