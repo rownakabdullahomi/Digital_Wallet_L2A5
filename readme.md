@@ -4,7 +4,7 @@
 
 ---
 
-**Live Demo**: [Digital Wallet on Vercel](https://digital-wallet-ashy.vercel.app)
+**Live Demo**: [Digital Wallet](https://digital-wallet-ashy.vercel.app)
 
 ---
 
