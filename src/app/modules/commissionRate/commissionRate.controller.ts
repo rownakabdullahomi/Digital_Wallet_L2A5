@@ -10,13 +10,17 @@ import { Role } from "../user/user.interface";
 const updateCommissionRate = async (req: Request, res: Response) => {
   const { rate } = req.body;
   const admin = req.user; // admin info
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const adminEmail = (admin as any)?.email;
+  
   if (!rate || isNaN(rate)) {
     throw new AppError(httpStatus.BAD_REQUEST, "Please provide a valid rate!!");
   }
 
+
   const updatedCommissionRate = await CommissionRate.findOneAndUpdate(
     {},
-    { rate, updatedBy: admin?.email || "unknown" },
+    { rate, updatedBy: adminEmail || "unknown" },
     { upsert: true, new: true, runValidators: true }
   );
 
