@@ -120,7 +120,7 @@ const updateUser = async (
   decodedToken: JwtPayload
 ) => {
   if (!isValidObjectId(userId)) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Invalid user ID");
+    throw new AppError(httpStatus.BAD_REQUEST, "Please provide a valid user ID");
   }
 
   const isUserExist = await User.findById(userId);
