@@ -13,6 +13,8 @@ import { IsAgentApproved } from "../user/user.interface";
 import { WalletStatus } from "../wallet/wallet.interface";
 import { CommissionRate } from "../commissionRate/commissionRate.model";
 import mongoose from "mongoose";
+import { QueryBuilder } from "../../utils/QueryBuilder";
+import { transactionSearchFields } from "./transaction.constant";
 
 // const createTransaction = async (payload: Partial<ITransaction>) => {
 //     const transaction = await Transaction.create(payload);
@@ -77,7 +79,6 @@ const cashInOutRequestFromUser = async (
   // const user = await validateUserById(userId);
   // const agent = await validateUserById(agentId);
 
- 
   const [user, agent] = await Promise.all([
     validateUserById(decodedToken.userId),
     validateUserById(agentId.toString()),
@@ -154,14 +155,20 @@ const cashInOutApprovalFromAgent = async (
       throw new AppError(httpStatus.BAD_REQUEST, "Agent is suspended!");
     }
 
-    const userWallet = await Wallet.findOne({ _id: userWalletId }).session(session);
-    if (!userWallet) throw new AppError(httpStatus.NOT_FOUND, "User wallet not found");
+    const userWallet = await Wallet.findOne({ _id: userWalletId }).session(
+      session
+    );
+    if (!userWallet)
+      throw new AppError(httpStatus.NOT_FOUND, "User wallet not found");
 
     if (userWallet.walletStatus === WalletStatus.BLOCKED)
       throw new AppError(httpStatus.NOT_FOUND, "User wallet is blocked");
 
-    const agentWallet = await Wallet.findOne({ userId: agent._id }).session(session);
-    if (!agentWallet) throw new AppError(httpStatus.NOT_FOUND, "Agent wallet not found");
+    const agentWallet = await Wallet.findOne({ userId: agent._id }).session(
+      session
+    );
+    if (!agentWallet)
+      throw new AppError(httpStatus.NOT_FOUND, "Agent wallet not found");
 
     pendingTransaction = await Transaction.findOne({
       walletId: userWalletId,
@@ -173,16 +180,21 @@ const cashInOutApprovalFromAgent = async (
       throw new AppError(httpStatus.NOT_FOUND, "No pending request found");
     }
 
-    const { transactionType, transactionAmount, description } = pendingTransaction;
+    const { transactionType, transactionAmount, description } =
+      pendingTransaction;
 
     const commissionRateData = await CommissionRate.findOne().session(session);
-    if (!commissionRateData) throw new AppError(httpStatus.NOT_FOUND, "Commission rate not found");
+    if (!commissionRateData)
+      throw new AppError(httpStatus.NOT_FOUND, "Commission rate not found");
 
     const commission = transactionAmount * commissionRateData.rate;
 
     if (transactionType === TransactionType.ADD_MONEY) {
       if (agentWallet.balance < transactionAmount) {
-        throw new AppError(httpStatus.BAD_REQUEST, "Agent has insufficient balance");
+        throw new AppError(
+          httpStatus.BAD_REQUEST,
+          "Agent has insufficient balance"
+        );
       }
 
       agentWallet.balance -= transactionAmount;
@@ -191,7 +203,10 @@ const cashInOutApprovalFromAgent = async (
 
     if (transactionType === TransactionType.WITHDRAW) {
       if (userWallet.balance < transactionAmount + commission) {
-        throw new AppError(httpStatus.BAD_REQUEST, "User has insufficient balance");
+        throw new AppError(
+          httpStatus.BAD_REQUEST,
+          "User has insufficient balance"
+        );
       }
 
       pendingTransaction.transactionAmount += commission;
@@ -211,7 +226,8 @@ const cashInOutApprovalFromAgent = async (
         commissionAmount: commission,
         transactionStatus: TransactionStatus.APPROVED,
         description:
-          description || `${transactionType} request approved successfully by agent`,
+          description ||
+          `${transactionType} request approved successfully by agent`,
       },
       {
         new: true,
@@ -320,14 +336,41 @@ const sendMoney = async (
 /// View all transactions of an specific user
 const transactionsByWalletId = async (walletId: string) => {
   const transactionHistory = await Transaction.find({ walletId });
+  const totalTransactions = await Transaction.countDocuments({ walletId });
 
-  return transactionHistory;
+  return {
+    data: transactionHistory,
+
+    meta: {
+      total: totalTransactions,
+    },
+  };
+
+  // return transactionHistory;
 };
 
 /// Admin -> All transactions history
-const allTransactions = async () => {
-  const allTransactionHistory = await Transaction.find();
-  return allTransactionHistory;
+const allTransactions = async (query: Record<string, string>) => {
+  // const allTransactionHistory = await Transaction.find();
+
+  const queryBuilder = new QueryBuilder(Transaction.find(), query);
+
+  const transactions = await queryBuilder
+    .search(transactionSearchFields)
+    .filter()
+    .sort()
+    .fields()
+    .paginate();
+
+  const [data, meta] = await Promise.all([
+    transactions.build(),
+    queryBuilder.getMeta(),
+  ]);
+
+  return {
+    data,
+    meta,
+  };
 };
 
 export const TransactionService = {
