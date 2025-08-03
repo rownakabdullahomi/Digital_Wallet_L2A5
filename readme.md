@@ -1,6 +1,12 @@
-# Digital Wallet API - Backend System
+# ![Mongoose](https://i.ibb.co/MyS3z0PS/mongoose.png)
+
+# 💸💲💳🫰 Digital Wallet - Backend System 💵💰🪙
+
+---
 
 **Live Demo**: [Digital Wallet on Vercel](https://digital-wallet-ashy.vercel.app)
+
+---
 
 ## Table of Contents
 - [Project Description](#project-description)
@@ -16,11 +22,15 @@
 - [Contributing](#contributing)
 - [License](#license)
 
+---
+
 ## Project Description
 
 The Digital Wallet API is a comprehensive backend system designed to facilitate secure financial transactions between users, agents, and administrators. This robust Node.js application provides a complete solution for digital wallet management, including user authentication, transaction processing, commission rate management, and wallet operations.
 
 Built with TypeScript and Express.js, this system implements modern security practices including JWT authentication, Google OAuth 2.0, role-based access control, and secure cookie management. The modular architecture ensures maintainability and scalability as the application grows.
+
+---
 
 ## Key Features
 
@@ -57,6 +67,8 @@ Built with TypeScript and Express.js, this system implements modern security pra
 - Input validation with Zod
 - Comprehensive error handling
 
+---
+
 ## Technologies Used
 
 ### Core Stack
@@ -82,6 +94,8 @@ Built with TypeScript and Express.js, this system implements modern security pra
 - **ts-node-dev** - TypeScript execution
 - **ESLint** - Code linting
 - **Prettier** - Code formatting
+
+---
 
 ## Folder Structure
 
@@ -152,6 +166,8 @@ src/
 └── server.ts
 ```
 
+---
+
 ## Installation
 
 ### Prerequisites
@@ -206,6 +222,8 @@ src/
 5. **Seed the super admin**
    The super admin account will be automatically created on server startup using the credentials from your `.env` file.
 
+---
+
 ## API Documentation
 
 The API follows RESTful principles and uses JSON for data exchange. All endpoints are prefixed with `/api/v1`.
@@ -238,6 +256,8 @@ The API follows RESTful principles and uses JSON for data exchange. All endpoint
 - `GET /api/v1/commission` - Get current commission rate (admin only)
 - `PATCH /api/v1/commission/update` - Update commission rate (admin only)
 
+---
+
 ## Environment Variables
 
 The application requires the following environment variables:
@@ -259,6 +279,8 @@ The application requires the following environment variables:
 | GOOGLE_CALLBACK_URL | Google OAuth callback URL | No | - |
 | EXPRESS_SESSION_SECRET | Session secret | Yes | - |
 | FRONTEND_URL | Frontend application URL | Yes | http://localhost:5173 |
+
+---
 
 ## Error Handling
 
@@ -295,6 +317,7 @@ Example error response:
   ]
 }
 ```
+---
 
 ## Authentication
 
@@ -321,6 +344,8 @@ Four user roles with different permissions:
 3. **ADMIN**: Can manage commission rates, view all transactions, manage updates and others
 4. **SUPER_ADMIN**: Full system access
 
+---
+
 ## Deployment
 
 The application is deployed on Vercel and can be accessed at:
@@ -344,7 +369,18 @@ For Vercel deployment:
 3. Set build command: `npm run build`
 4. Set output directory: `dist`
 
-## Contributing
+---
+
+### Coding Standards
+- Follow existing code style
+- Use TypeScript types consistently
+- Write unit tests for new features
+- Document new endpoints
+- Keep commits atomic and well-described
+
+---
+
+## 🙌 Contributing
 
 Contributions are welcome! Please follow these guidelines:
 
@@ -354,17 +390,24 @@ Contributions are welcome! Please follow these guidelines:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-### Coding Standards
-- Follow existing code style
-- Use TypeScript types consistently
-- Write unit tests for new features
-- Document new endpoints
-- Keep commits atomic and well-described
-
-
-
 ---
 
 **Project Maintainer**: Rownak Abdullah
 **GitHub**: [rownakabdullahomi](https://github.com/rownakabdullahomi)  
 **Live Demo**: [Digital Wallet on Vercel](https://digital-wallet-ashy.vercel.app)
+
+---
+
+## 📧 Contact
+
+**Rownak Abdullah** — [rownakabdullahomi@gmail.com](rownakabdullahomi@gmail.com) 
+
+---
+
+> ⭐ If you found this helpful, don’t forget to star the repo!
+
+---
+
+## 🤝 Thank You!
+
+Happy Coding 🚀
