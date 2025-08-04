@@ -13,6 +13,6 @@ router.post("/agent-add-money/:userId", (0, checkAuth_1.checkAuth)(user_interfac
 router.post("/user-cash-in-out", (0, checkAuth_1.checkAuth)(user_interface_1.Role.USER), (0, validateRequest_1.validateRequest)(transaction_validation_1.createTransactionZodSchema), transaction_controller_1.TransactionController.cashInOutRequestFromUser);
 router.post("/cash-in-out-approval-from-agent", (0, checkAuth_1.checkAuth)(user_interface_1.Role.AGENT), (0, validateRequest_1.validateRequest)(transaction_validation_1.updateTransactionZodSchema), transaction_controller_1.TransactionController.cashInOutApprovalFromAgent);
 router.post("/send-money", (0, checkAuth_1.checkAuth)(user_interface_1.Role.USER), transaction_controller_1.TransactionController.sendMoney);
-router.get("/history/:walletId", (0, checkAuth_1.checkAuth)(user_interface_1.Role.USER, user_interface_1.Role.AGENT), transaction_controller_1.TransactionController.transactionsByWalletId);
+router.get("/history", (0, checkAuth_1.checkAuth)(user_interface_1.Role.USER, user_interface_1.Role.AGENT), transaction_controller_1.TransactionController.transactionsByWalletId);
 router.get("/all-history", (0, checkAuth_1.checkAuth)(user_interface_1.Role.ADMIN, user_interface_1.Role.SUPER_ADMIN), transaction_controller_1.TransactionController.allTransactions);
 exports.TransactionRoutes = router;

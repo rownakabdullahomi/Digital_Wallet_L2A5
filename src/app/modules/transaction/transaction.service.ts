@@ -189,7 +189,10 @@ const cashInOutApprovalFromAgent = async (
 
     const commission = transactionAmount * commissionRateData.rate;
 
-    if (transactionType === TransactionType.ADD_MONEY) {
+    if (
+      transactionType === TransactionType.ADD_MONEY ||
+      transactionType === TransactionType.WITHDRAW
+    ) {
       if (agentWallet.balance < transactionAmount) {
         throw new AppError(
           httpStatus.BAD_REQUEST,
@@ -336,10 +339,13 @@ const sendMoney = async (
 /// View all transactions of an specific walletId
 const transactionsByWalletId = async (decodedToken: JwtPayload) => {
   const userId = await validateUserById(decodedToken.userId);
-  const wallet = await Wallet.findOne({userId})
-  if(!wallet) throw new AppError(httpStatus.NOT_FOUND, "No wallet found of this user.")
+  const wallet = await Wallet.findOne({ userId });
+  if (!wallet)
+    throw new AppError(httpStatus.NOT_FOUND, "No wallet found of this user.");
   const transactionHistory = await Transaction.find({ walletId: wallet._id });
-  const totalTransactions = await Transaction.countDocuments({ walletId: wallet._id });
+  const totalTransactions = await Transaction.countDocuments({
+    walletId: wallet._id,
+  });
 
   return {
     data: transactionHistory,

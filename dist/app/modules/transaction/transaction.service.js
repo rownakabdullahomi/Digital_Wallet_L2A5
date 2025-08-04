@@ -245,10 +245,14 @@ const sendMoney = (payload, decodedToken) => __awaiter(void 0, void 0, void 0, f
     });
     return sendMoneyTransaction;
 });
-/// View all transactions of an specific user
-const transactionsByWalletId = (walletId) => __awaiter(void 0, void 0, void 0, function* () {
-    const transactionHistory = yield transaction_model_1.Transaction.find({ walletId });
-    const totalTransactions = yield transaction_model_1.Transaction.countDocuments({ walletId });
+/// View all transactions of an specific walletId
+const transactionsByWalletId = (decodedToken) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = yield (0, validateUserById_1.validateUserById)(decodedToken.userId);
+    const wallet = yield wallet_model_1.Wallet.findOne({ userId });
+    if (!wallet)
+        throw new AppError_1.default(http_status_codes_1.default.NOT_FOUND, "No wallet found of this user.");
+    const transactionHistory = yield transaction_model_1.Transaction.find({ walletId: wallet._id });
+    const totalTransactions = yield transaction_model_1.Transaction.countDocuments({ walletId: wallet._id });
     return {
         data: transactionHistory,
         meta: {

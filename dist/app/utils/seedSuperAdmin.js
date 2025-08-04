@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.seedSuperAdmin = void 0;
+/* eslint-disable no-console */
 const env_1 = __importDefault(require("../config/env"));
 const user_interface_1 = require("../modules/user/user.interface");
 const user_model_1 = require("../modules/user/user.model");
