@@ -143,7 +143,10 @@ const cashInOutApprovalFromAgent = (payload, decodedToken) => __awaiter(void 0, 
         const commissionRateData = yield commissionRate_model_1.CommissionRate.findOne().session(session);
         if (!commissionRateData)
             throw new AppError_1.default(http_status_codes_1.default.NOT_FOUND, "Commission rate not found");
-        const commission = transactionAmount * commissionRateData.rate;
+        let commission = 0;
+        if (transactionType !== transaction_interface_1.TransactionType.ADD_MONEY) {
+            commission = transactionAmount * commissionRateData.rate;
+        }
         if (transactionType === transaction_interface_1.TransactionType.ADD_MONEY) {
             if (agentWallet.balance < transactionAmount) {
                 throw new AppError_1.default(http_status_codes_1.default.BAD_REQUEST, "Agent has insufficient balance");
@@ -252,7 +255,9 @@ const transactionsByWalletId = (decodedToken) => __awaiter(void 0, void 0, void 
     if (!wallet)
         throw new AppError_1.default(http_status_codes_1.default.NOT_FOUND, "No wallet found of this user.");
     const transactionHistory = yield transaction_model_1.Transaction.find({ walletId: wallet._id });
-    const totalTransactions = yield transaction_model_1.Transaction.countDocuments({ walletId: wallet._id });
+    const totalTransactions = yield transaction_model_1.Transaction.countDocuments({
+        walletId: wallet._id,
+    });
     return {
         data: transactionHistory,
         meta: {

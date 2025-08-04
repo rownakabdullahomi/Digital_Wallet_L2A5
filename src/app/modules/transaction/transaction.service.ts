@@ -187,11 +187,14 @@ const cashInOutApprovalFromAgent = async (
     if (!commissionRateData)
       throw new AppError(httpStatus.NOT_FOUND, "Commission rate not found");
 
-    const commission = transactionAmount * commissionRateData.rate;
+    let commission = 0;
+
+    if (transactionType !== TransactionType.ADD_MONEY){
+      commission = transactionAmount * commissionRateData.rate;
+    }
 
     if (
-      transactionType === TransactionType.ADD_MONEY ||
-      transactionType === TransactionType.WITHDRAW
+      transactionType === TransactionType.ADD_MONEY
     ) {
       if (agentWallet.balance < transactionAmount) {
         throw new AppError(
