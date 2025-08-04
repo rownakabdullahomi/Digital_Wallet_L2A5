@@ -333,10 +333,13 @@ const sendMoney = async (
   return sendMoneyTransaction;
 };
 
-/// View all transactions of an specific user
-const transactionsByWalletId = async (walletId: string) => {
-  const transactionHistory = await Transaction.find({ walletId });
-  const totalTransactions = await Transaction.countDocuments({ walletId });
+/// View all transactions of an specific walletId
+const transactionsByWalletId = async (decodedToken: JwtPayload) => {
+  const userId = await validateUserById(decodedToken.userId);
+  const wallet = await Wallet.findOne({userId})
+  if(!wallet) throw new AppError(httpStatus.NOT_FOUND, "No wallet found of this user.")
+  const transactionHistory = await Transaction.find({ walletId: wallet._id });
+  const totalTransactions = await Transaction.countDocuments({ walletId: wallet._id });
 
   return {
     data: transactionHistory,

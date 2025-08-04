@@ -90,9 +90,11 @@ const sendMoney = catchAsync(async (req: Request, res: Response) => {
 });
 const transactionsByWalletId = catchAsync(
   async (req: Request, res: Response) => {
-    const walletId = req.params.walletId;
+    const decodedToken = req.user;
+    // const walletId = req.params.walletId;
     const result = await TransactionService.transactionsByWalletId(
-      walletId.toString()
+      // walletId.toString(), 
+      decodedToken as JwtPayload
     );
 
     sendResponse(res, {

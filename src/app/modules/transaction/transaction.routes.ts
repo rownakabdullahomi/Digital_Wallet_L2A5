@@ -31,7 +31,7 @@ router.post(
   TransactionController.sendMoney
 );
 router.get(
-  "/history/:walletId",
+  "/history",
   checkAuth(Role.USER, Role.AGENT),
   TransactionController.transactionsByWalletId
 );
